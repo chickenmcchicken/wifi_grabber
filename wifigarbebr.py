@@ -1,8 +1,7 @@
 import subprocess
-#only works on windows 10/11
 import os
-
-
+import PySimpleGUI as sg 
+import time
 
 
 file= open('data.txt', 'a')
@@ -17,10 +16,18 @@ def file_key_contents():
     return key
 
 
-def connect(profile, key):#TODO:
+
+def connect(ssid, profile, key):#TODO:
+
+    # Parameters:
+
+    # Tag             Value
+    # ssid          - SSID of the wireless network.
+    # name          - Name of the profile to be used in connection attempt.
+    # interface     - Name of the interface from which connection is attempted.
     try:
-        interface="Wireless Network Connection"
-        subprocess.run(['netsh', 'wlan', 'connect', profile, key, "WI-FI"])
+        
+        subprocess.run(['netsh', 'wlan', 'connect', ssid, profile, key, "WI-FI"])
     except:
         print("connection is already established")
 
@@ -33,6 +40,8 @@ def compare(list1=None, list2=file_key_contents()):
 
 sub1= subprocess.check_output(["netsh", "wlan", "show", "profile"]).decode("utf-8").split("\n")
 profiles=[i.split(":")[1][1:-1] for i in sub1 if "All User Profile" in i]
+
+
 def windows_wifi_grabber():
     with open("data.txt", "a") as data:
 
@@ -58,11 +67,30 @@ def windows_wifi_grabber():
         data.close()
 
 def main():
-    if os.name == "nt":
-        windows_wifi_grabber()
-    else:
-        print('invalid system')
 
-if __name__ =="__main__":
+#windows os = nt
+    sg.theme_background_color('DarkBlue')
+    layout= [[sg.Button('Wifi Grabber')],
+    [sg.Button('Display data')],          
+    [sg.Text('', enable_events=True, key='GRAB')]
+
+    ]
+
+    window= sg.Window('Wifi-Grabber', layout, size=(600, 500))
+
+    running = True
+    while running:
+        event, values = window.read()
+
+        if event == sg.WIN_CLOSED:
+            running=False
+        if event== 'Wifi Grabber':
+            windows_wifi_grabber()
+            window['GRAB'].update('Done')
+        if event=='Display data':
+            os.startfile("data.txt")
+
+
+if __name__ == '__main__':
     main()
 
