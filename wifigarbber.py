@@ -1,14 +1,13 @@
 import subprocess
 import os
 import PySimpleGUI as sg 
-import time
 
 
 file= open('data.txt', 'a')
 file.close()
 
+
 def file_key_contents():
-    keys=[]
     with open('data.txt', 'r') as data:
         data.read(8)
         line=data.readlines()
@@ -17,7 +16,8 @@ def file_key_contents():
 
 
 
-def connect(ssid, profile, key):#TODO:
+
+def connect(profile, *argvs):#TODO:
 
     # Parameters:
 
@@ -27,7 +27,7 @@ def connect(ssid, profile, key):#TODO:
     # interface     - Name of the interface from which connection is attempted.
     try:
         
-        subprocess.run(['netsh', 'wlan', 'connect', ssid, profile, key, "WI-FI"])
+        subprocess.run(['netsh', 'wlan', 'connect', profile])
     except:
         print("connection is already established")
 
@@ -40,6 +40,21 @@ def compare(list1=None, list2=file_key_contents()):
 
 sub1= subprocess.check_output(["netsh", "wlan", "show", "profile"]).decode("utf-8").split("\n")
 profiles=[i.split(":")[1][1:-1] for i in sub1 if "All User Profile" in i]
+
+def file_save_xml():
+    for i in profiles:
+        proc1 = subprocess.run(['netsh', 'wlan', 'export', 'profile', 'name='+i, 'key=clear', "folder=c:\\xml-files"])
+
+
+
+def xml_import(drive, xmlfile=None):#TODO: test if it works
+    if xmlfile==None:
+        osfiles=os.listdir("c:\\xml-files")
+        for xl in osfiles:
+            proc= subprocess.run(['netsh', 'wlan', 'add', 'profile', drive+':\\xml-files\\'+xl])
+    else:
+        proc= subprocess.run(['netsh', 'wlan', 'add', 'profile', drive+':\\xml-files\\'+xmlfile])
+
 
 
 def windows_wifi_grabber():
@@ -66,13 +81,30 @@ def windows_wifi_grabber():
 
         data.close()
 
+
+
 def main():
 
 #windows os = nt
+#TODO:
+#implement the same feaures for linux, Mac books and chrome os 
+
+    osfiles=os.listdir("c:\\xml-files")
     sg.theme_background_color('DarkBlue')
     layout= [[sg.Button('Wifi Grabber')],
     [sg.Button('Display data')],          
-    [sg.Text('', enable_events=True, key='GRAB')]
+    [sg.Text('', enable_events=True, key='GRAB')],
+    [sg.Button('export')],
+    [sg.Input("C")],
+    [sg.Combo(osfiles)],
+    [sg.Button('import')],
+    [sg.Combo(profiles)],
+    [sg.Button('Connect')]
+    
+
+
+    
+
 
     ]
 
@@ -89,8 +121,24 @@ def main():
             window['GRAB'].update('Done')
         if event=='Display data':
             os.startfile("data.txt")
+        if event== 'export':
+            if os.path.exists('c:\\xml-files')==True:
+                file_save_xml()
+            elif os.path.exists('c:\\xml-files')==False:
+                os.mkdir('c:\\xml-files')
+                file_save_xml()
+        if event=='import':
+            #value[0] = chosen profile import
+            xml_import(values[0], values[1])
+            
+        if event=='Connect':
+            connect(values[2])
+
+               
+
 
 
 if __name__ == '__main__':
     main()
+
 
